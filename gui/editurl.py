@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt
 from utils import check_url
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
+import requests
+import bs4 as BS
 
 class EditUrlDialog(QDialog):
     def __init__(self, database, urls, parent=None):
@@ -76,6 +78,12 @@ class EditUrlDialog(QDialog):
                 item = QListWidgetItem(url)
                 self.url_list.addItem(item) 
                 self.add_edit.clear()
+                # add content and modified first time
+                response = requests.get(url)
+                html = response.text
+                self.database.add_content(html)
+                modified_time = response.headers.get('Last-Modified')
+                self.database.add_last_modified(url, modified_time)
         else:
             QMessageBox.warning(self, "Warning", "Invalid URL!")
         #添加完清空输入框，并刷新下面的所有url显示
@@ -105,6 +113,18 @@ class EditUrlDialog(QDialog):
                     self.database.delete_url(url_id)
                 self.url_list.takeItem(self.url_list.row(item))
     
+    # def add_content_firsttime(self, url):
+    #     response = requests.get(url)
+    #     if response.status_code != 200:
+    #         return None
+    #     content_type = response.headers.get('content-type')
+    #     if not content_type or not content_type.startswith('text/html'):
+    #         return None
+    #     else:
+    #         html = response.text
+    #         self.database.add_content(html)
+    #         print(html)
+    #     return 
 
     # def accept(self):
     #     for url in self.urls:
