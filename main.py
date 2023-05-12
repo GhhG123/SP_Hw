@@ -16,7 +16,7 @@ if __name__ == '__main__':
     urls = database.get_urls()
     edit_url_dialog = EditUrlDialog(database, urls,)
     settings_dialog = SettingsDialog(database)
-    timer = Timer(database.get_refresh_time() * 60, spider.check_urls)
+    timer = Timer(database.get_refresh_time() * 60, Spider.check_urls)
     timer.start()
 
     def edit_url():

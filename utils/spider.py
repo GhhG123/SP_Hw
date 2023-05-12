@@ -12,23 +12,9 @@ class Spider:
         #     url_id = url[0]
         #     #初始化时保存一次、添加网页时保存一次，都不作为更新内容展示
         #     content = self.get_content(url[1])
-            
-
-
-    # def check_urls(self):
-    #     urls = self.database.get_urls()
-    #     for url in urls:
-    #         url_id = url[0]
-    #         last_modified = url[3]
-    #         response = requests.head(url[1])
-    #         if response.status_code != 200:
-    #             continue
-    #         modified = response.headers.get('last-modified')
-    #         if modified and modified == last_modified:
-    #             continue
-    #         content = self.get_content(url[1])
-    #         if content:
-    #             self.database.update_content(url_id, content, modified)
+    
+    def check_urls(self):
+        return
 
     def get_content_internet(self, url):
         response = requests.get(url)
