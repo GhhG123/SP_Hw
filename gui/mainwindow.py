@@ -3,12 +3,17 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLab
 from PyQt5.QtCore import Qt, QTimer
 from gui.editurl import EditUrlDialog
 from gui.settings import SettingsDialog
+import PyQt5.QtCore as QtCore
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, add_url_func,):
+    edit_url_clicked = QtCore.pyqtSignal()
+    settings_clicked = QtCore.pyqtSignal()
+    def __init__(self, database):
         super().__init__()
-        self.add_url_func = add_url_func
+        # self.add_url_func = add_url_func
         # self.get_urls_func = get_urls_func
+        self.database = database
         self.current_urls = []
         self.init_ui()
         self.refresh_urls()
@@ -57,7 +62,8 @@ class MainWindow(QMainWindow):
             self.url_list.addItem(item)
 
     def show_edit_url_dialog(self):
-        dialog = EditUrlDialog(self.add_url_func, self.current_urls, self)
+        urls = self.database.get_urls()
+        dialog = EditUrlDialog(self.database, urls, self)
         dialog.exec_()
         self.refresh_urls()
 

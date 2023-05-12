@@ -12,6 +12,11 @@ class Database:
                      (id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT NOT NULL UNIQUE, last_content TEXT,
                      last_modified TEXT, last_checked TEXT)''')
         self.conn.commit()
+        c.execute('''CREATE TABLE IF NOT EXISTS settings (
+                            name TEXT PRIMARY KEY,
+                            value TEXT NOT NULL
+                        )''')
+        self.conn.commit()
     # id：自增长的整数类型主键，用于唯一标识每一条记录。
     # url：文本类型，用于存储网页的URL地址，是一个必填字段，并且具有唯一性约束，保证不会出现重复的URL地址。
     # last_content：文本类型，用于存储最新的网页内容，如果是第一次爬取，则为NULL。-----类型要改吗？
@@ -34,6 +39,12 @@ class Database:
         c = self.conn.cursor()
         c.execute('SELECT * FROM urls WHERE id=?', (url_id,))
         return c.fetchone()
+    
+    def url_exists(self, url):
+        c = self.conn.cursor()
+        c.execute('SELECT COUNT(*) FROM urls WHERE url = ?', (url,))
+        result = c.fetchone()
+        return result[0] > 0    
 
     def update_content(self, url_id, content, modified):
         c = self.conn.cursor()

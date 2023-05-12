@@ -1,94 +1,16 @@
-# from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-#                              QListWidget, QListWidgetItem, QMessageBox)
-# from PyQt5.QtCore import Qt
-
-# from utils import check_url
-
-
-# class EditUrl(QWidget):
-#     def __init__(self, urls, parent=None):
-#         super().__init__(parent)
-#         self.urls = urls
-#         self.initUI()
-
-#     def initUI(self):
-#         # url input area
-#         url_label = QLabel("Add URL:")
-#         self.url_edit = QLineEdit()
-#         add_button = QPushButton("Add")
-#         add_button.clicked.connect(self.addUrl)
-
-#         url_input_layout = QHBoxLayout()
-#         url_input_layout.addWidget(url_label)
-#         url_input_layout.addWidget(self.url_edit)
-#         url_input_layout.addWidget(add_button)
-
-#         # url list area
-#         self.url_list = QListWidget()
-#         self.url_list.setSelectionMode(QListWidget.MultiSelection)
-
-#         for url in self.urls:
-#             item = QListWidgetItem(url)
-#             self.url_list.addItem(item)
-
-#         # button area
-#         return_button = QPushButton("Return")
-#         return_button.clicked.connect(self.close)
-
-#         delete_button = QPushButton("Delete")
-#         delete_button.clicked.connect(self.deleteUrl)
-
-#         button_layout = QHBoxLayout()
-#         button_layout.addStretch(1)
-#         button_layout.addWidget(return_button)
-#         button_layout.addWidget(delete_button)
-
-#         # main layout
-#         main_layout = QVBoxLayout()
-#         main_layout.addLayout(url_input_layout)
-#         main_layout.addWidget(self.url_list)
-#         main_layout.addLayout(button_layout)
-
-#         self.setLayout(main_layout)
-#         self.setWindowTitle("Edit URLs")
-
-#     def addUrl(self):
-#         url = self.url_edit.text()
-#         if check_url(url):
-#             self.urls.append(url)
-#             item = QListWidgetItem(url)
-#             self.url_list.addItem(item)
-#         else:
-#             QMessageBox.warning(self, "Warning", "Invalid URL!")
-
-#     def deleteUrl(self):
-#         selected_items = self.url_list.selectedItems()
-#         if not selected_items:
-#             QMessageBox.warning(self, "Warning", "No item selected!")
-#             return
-
-#         reply = QMessageBox.question(self, "Confirm", "Are you sure to delete selected items?",
-#                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-#         if reply == QMessageBox.Yes:
-#             for item in selected_items:
-#                 self.urls.remove(item.text())
-#                 self.url_list.takeItem(self.url_list.row(item))
-#         else:
-#             return
-
-
-
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, \
     QListWidgetItem, QPushButton, QMessageBox
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt
 from utils import check_url
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 
 class EditUrlDialog(QDialog):
-    def __init__(self, urls, parent=None):
+    def __init__(self, database, urls, parent=None):
         super().__init__(parent)
-        #self.add_url_func = add_url_func
+        # self.add_url_func = add_url_func
+        self.database = database
         self.urls = urls
         self.selected_urls = []
         self.init_ui()
@@ -113,6 +35,14 @@ class EditUrlDialog(QDialog):
         add_layout.addWidget(self.add_button)
 
         self.url_list = QListWidget()
+        self.url_list.setSelectionMode(QAbstractItemView.MultiSelection)
+        for url in self.urls:
+            print(url[1])
+            item = QListWidgetItem(url[1])
+            item.setData(Qt.UserRole, url[0])
+            self.url_list.addItem(item)
+        print(self.url_list.count())
+        print(self.url_list.item(0))
         main_layout.addWidget(self.url_list)
 
         button_layout = QHBoxLayout()
@@ -134,19 +64,18 @@ class EditUrlDialog(QDialog):
         close_button.clicked.connect(self.accept)
         button_layout.addWidget(close_button)
 
-        for url in self.urls:
-            item = QListWidgetItem(url[1])
-            item.setData(Qt.UserRole, url[0])
-            self.url_list.addItem(item)
-
     def add_url(self):
-        url = self.url_edit.text()
-        if check_url(url):
-            self.urls.append(url)
-            item = QListWidgetItem(url)
-            self.url_list.addItem(item) 
-            #清除文本框
-            self.url_edit.clean()
+        url = self.add_edit.text()
+        if check_url.check_url(url):
+            if self.database.url_exists(url):
+                QMessageBox.warning(self, "Warning", "URL Already Exist!")
+                self.add_edit.clear()
+            else:
+                self.urls.append(url)
+                self.database.add_url(url)
+                item = QListWidgetItem(url)
+                self.url_list.addItem(item) 
+                self.add_edit.clear()
         else:
             QMessageBox.warning(self, "Warning", "Invalid URL!")
         #添加完清空输入框，并刷新下面的所有url显示
@@ -172,8 +101,10 @@ class EditUrlDialog(QDialog):
             for item in selected_items:
                 url_id = item.data(Qt.UserRole)
                 if url_id != -1:
-                    self.selected_urls.remove(url_id)
+                    #self.selected_urls.remove(url_id)
+                    self.database.delete_url(url_id)
                 self.url_list.takeItem(self.url_list.row(item))
+    
 
     # def accept(self):
     #     for url in self.urls:
