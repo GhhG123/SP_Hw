@@ -47,10 +47,11 @@ class Database:
         result = c.fetchone()
         return result[0] > 0    
     
-    def add_content(self, html):
+    def add_content(self, html, url):
         c = self.conn.cursor()
-        c.execute('INSERT INTO urls (last_content) VALUES (?)', (html,))
+        c.execute('UPDATE urls SET last_content=? WHERE url=?', (html,url))
         self.conn.commit()
+        print(html)
         return html
     
     def get_content_db(self, url):
@@ -64,9 +65,9 @@ class Database:
                   (content, modified, url))
         self.conn.commit()
 
-    def delete_url(self, url_id):
+    def delete_url(self, url):
         c = self.conn.cursor()
-        c.execute('DELETE FROM urls WHERE id=?', (url_id,))
+        c.execute('DELETE FROM urls WHERE url=?', (url,))
         self.conn.commit()
 
     def add_last_modified(self, url, modified):

@@ -10,8 +10,8 @@ url = "https://www.ustc.edu.cn"
 response = requests.get(url)
 # encoding = chardet.detect(response.content.strip())['encoding']
 # html = response.content.strip().decode(encoding)
-encoding = chardet.detect(response.content.strip())['encoding']
-html = response.content.strip().decode(encoding)
+encoding = chardet.detect(response.content)['encoding']
+html = response.content.decode(encoding)
 
 # 判断响应状态码是否为200，表示成功
 if response.status_code == 200:

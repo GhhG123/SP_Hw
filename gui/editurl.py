@@ -7,6 +7,7 @@ from utils import check_url
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 import requests
 import bs4 as BS
+import chardet
 
 class EditUrlDialog(QDialog):
     def __init__(self, database, urls, parent=None):
@@ -80,8 +81,9 @@ class EditUrlDialog(QDialog):
                 self.add_edit.clear()
                 # add content and modified first time
                 response = requests.get(url)
-                html = response.text
-                self.database.add_content(html)
+                encoding = chardet.detect(response.content)['encoding']
+                html = response.content.decode(encoding)
+                self.database.add_content(html, url)
                 modified_time = response.headers.get('Last-Modified')
                 self.database.add_last_modified(url, modified_time)
         else:

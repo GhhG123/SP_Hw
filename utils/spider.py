@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import difflib
 import html
 import json
+import chardet
 
 class Spider:
     def __init__(self, database):
@@ -24,7 +25,8 @@ class Spider:
         if not content_type or not content_type.startswith('text/html'):
             return None
         else:
-            html = response.text
+            encoding = chardet.detect(response.content)['encoding']
+            html = response.content.decode(encoding)
         return html
     
     def get_content_db(self, url):
@@ -42,11 +44,17 @@ class Spider:
             self.database.update_content_and_modified(url, content, modified_time)
             new_html = ''.join([line[2:] for line in new_lines])
             soup = BeautifulSoup(new_html, 'html.parser')
-            # 获取所有带有title和href属性的a标签，并将它们以title+href的方式呈现给用户
-            for a in soup.find_all('a', {'title': True, 'href': True}):
-                print("<a href='{0}'>{1}</a>", a.get('title'), a.get('href'))
-            #把列表转位json的形式存储
-            links = [(a.get('title'), a.get('href')) for a in soup.find_all('a', {'title': True, 'href': True})]
+            # 获取a标签的title和href属性
+            for link in soup.find_all('a', {'title': True, 'href': True}):
+                # 检查 href 属性是否存在
+                if 'href' in link.attrs:
+                    print(link.text.strip(), link['href'].strip())
+                else:
+                    continue
+            # for a in soup.find_all('a', {'title': True, 'href': True}):
+            #     print("<a href='{0}'>{1}</a>", a.get('title'), a.get('href'))
+            
+            links = [(a.text.strip(), a['href'].strip()) for a in soup.find_all('a', {'title': True, 'href': True})]
             self.save_content(links)
             return links
 
