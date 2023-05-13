@@ -28,6 +28,7 @@ class Spider:
         else:
             encoding = chardet.detect(response.content)['encoding']
             html = response.content.decode(encoding)
+            print(html)
         return html
 
     def get_content_db(self, url):

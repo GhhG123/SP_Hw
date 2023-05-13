@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, \
-    QListWidgetItem, QPushButton, QMessageBox
+    QListWidgetItem, QPushButton, QMessageBox,QTextBrowser, QScrollArea, QScrollBar
 from PyQt5.QtCore import Qt, QTimer
 from gui.editurl import EditUrlDialog
 from gui.settings import SettingsDialog
 import PyQt5.QtCore as QtCore
 import utils.spider as Spider
+import PyQt5.QtGui as QtGui
 
 
 class MainWindow(QMainWindow):
@@ -37,9 +38,13 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(label)
 
         # that's wrong
-        self.content_update_list = QListWidget()
-        #self.content_update_list.setTextFormat(Qt.RichText)
-        main_layout.addWidget(self.content_update_list)
+        # self.content_update_list = QListWidget()
+        # main_layout.addWidget(self.content_update_list)
+        self.text_browser = QTextBrowser()
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.text_browser)
+        main_layout.addWidget(scroll_area)
 
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
@@ -57,21 +62,42 @@ class MainWindow(QMainWindow):
         button_layout.addWidget(settings_button)
 
     def refresh_any_updates(self):
-        # exist_update = self.spider.check_all(self.database)
-        # if exist_update:
-        self.refresh_content_mainwindow()
-        QMessageBox.information(self, 'Info', 'There are new updates!')
+        exist_update = self.spider.check_all(self.database)
+        if exist_update:
+            self.text_browser.clear()
+            self.refresh_content_mainwindow()
+            QMessageBox.information(self, 'Info', 'There are new updates!')
         
     def refresh_content_mainwindow(self):
-        self.content_update_list.clear()
+        self.text_browser.clear()
         all_links = self.database.get_all_last_content_upgrade()
-        #print(all_links)
+        html = ""
         for link in all_links:
-            item = QListWidgetItem()
-            item.setText("<a href='{0}'>{1}</a>".format(link[1], link[0]))
-            item.setToolTip("<html><head/><body><p>" + item.text() + "</p></body></html>")
-            self.content_update_list.addItem(item)
-            print(item)
+            html += f"<a href='{link[1]}'>{link[0]}</a><br>"
+        self.text_browser.setHtml(html)
+        self.text_browser.moveCursor(QtGui.QTextCursor.End)
+        self.text_browser.ensureCursorVisible()
+        self.text_browser.openExternalLinks()
+        # self.content_update_list.clear()
+        # all_links = self.database.get_all_last_content_upgrade()
+        # #print(all_links)
+        # for link in all_links:
+        #     item = QListWidgetItem()
+        #     item.setText("<a href='{0}'>{1}</a>".format(link[1], link[0]))
+        #     item.setToolTip("<html><head/><body><p>" + item.text() + "</p></body></html>")
+        #     self.content_update_list.addItem(item)
+        #     print(item)
+        
+        # all_links = self.database.get_all_last_content_upgrade()
+        # #self.scrollbar.setValue(self.scrollbar.maximum())
+        # for link in all_links:
+        #     item = "<a href='{0}'>{1}</a>".format(link[1], link[0])
+        #     self.textedit.append(item)
+        #     self.scrollbar.setValue(self.scrollbar.maximum())
+        #     # self.scrollbar = self.scroll_area.verticalScrollBar()
+        #     print(item)
+
+        
 
     def refresh_urls(self):
         #self.current_urls = self.get_urls_func()
@@ -94,6 +120,8 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             self.refresh_timer.setInterval(int(dialog.time_edit.text())*60*60*1000)
 
+    def scrollbar_moved(self, value):
+        self.text_browser.verticalScrollBar().setValue(value)
 
 
 
