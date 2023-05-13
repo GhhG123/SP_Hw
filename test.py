@@ -20,12 +20,17 @@ if response.status_code == 200:
     
     # 找到所有的链接标签<a>
     # 遍历链接标签，并打印出链接的文本和地址
-    for link in soup.find_all('a', {'title': True, 'href': True}):
-        # 检查 href 属性是否存在
-        if 'href' in link.attrs:
-            print(link.text.strip(), link['href'].strip())
-        else:
-            continue
+    links = [(a.text.strip(), a['href'].strip()) for a in soup.find_all('a', {'title': True, 'href': True})]
+
+    print(links[0][0], links[0][1])
+    # print(links)
+
+    # for link in soup.find_all('a', {'title': True, 'href': True}):
+    #     # 检查 href 属性是否存在
+    #     if 'href' in link.attrs:
+    #         print(link.text.strip(), link['href'].strip())
+    #     else:
+    #         continue
 
     # all = soup.select('a', {'title': True, 'href': True})
     # print(all)

@@ -12,10 +12,11 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     database = Database('urls.db')
     spider = Spider(database)
-    main_window = MainWindow(database,)
+    main_window = MainWindow(database,spider)
     urls = database.get_urls()
     edit_url_dialog = EditUrlDialog(database, urls,)
     settings_dialog = SettingsDialog(database)
+
     timer = Timer(database.get_refresh_time() * 60, Spider.check_urls)
     timer.start()
 

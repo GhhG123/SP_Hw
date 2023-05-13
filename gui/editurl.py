@@ -83,6 +83,7 @@ class EditUrlDialog(QDialog):
                 response = requests.get(url)
                 encoding = chardet.detect(response.content)['encoding']
                 html = response.content.decode(encoding)
+                #utf_html = (html.encode('utf-8'),)                
                 self.database.add_content(html, url)
                 modified_time = response.headers.get('Last-Modified')
                 self.database.add_last_modified(url, modified_time)
@@ -114,19 +115,6 @@ class EditUrlDialog(QDialog):
                     #self.selected_urls.remove(url_id)
                     self.database.delete_url(url_id)
                 self.url_list.takeItem(self.url_list.row(item))
-    
-    # def add_content_firsttime(self, url):
-    #     response = requests.get(url)
-    #     if response.status_code != 200:
-    #         return None
-    #     content_type = response.headers.get('content-type')
-    #     if not content_type or not content_type.startswith('text/html'):
-    #         return None
-    #     else:
-    #         html = response.text
-    #         self.database.add_content(html)
-    #         print(html)
-    #     return 
 
     # def accept(self):
     #     for url in self.urls:

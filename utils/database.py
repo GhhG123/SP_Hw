@@ -56,8 +56,8 @@ class Database:
     
     def get_content_db(self, url):
         c = self.conn.cursor()
-        c.execute('SELECT last_content FROM urls WHERE url=?', (url,))
-        return c.fetchone()
+        c.execute('SELECT last_content FROM urls WHERE url=?', (str(url),))
+        return c.fetchone()[0]
     
     def update_content_and_modified(self, url, content, modified):
         c = self.conn.cursor()
@@ -65,27 +65,48 @@ class Database:
                   (content, modified, url))
         self.conn.commit()
 
-    def delete_url(self, url):
+    def delete_url(self, url_id):
         c = self.conn.cursor()
-        c.execute('DELETE FROM urls WHERE url=?', (url,))
+        c.execute('DELETE FROM urls WHERE id=?', (url_id,))
         self.conn.commit()
 
     def add_last_modified(self, url, modified):
+        print(modified)
         c = self.conn.cursor()
-        c.execute('UPDATE urls SET last_content=? WHERE url=?', (modified, url))
+        c.execute('UPDATE urls SET last_modified=? WHERE url=?', (modified, url))
         self.conn.commit()
 
     def add_last_content_upgrade(self, url, content_update):
         c = self.conn.cursor()
+        if content_update is None:
+            c.execute('UPDATE urls SET last_content=NULL, last_modified=NULL, last_checked=datetime() WHERE url=?',
+                  (url, ))
+            self.conn.commit()
+            return
         c.execute('UPDATE urls SET last_update=? WHERE url=?', (content_update, url))
         self.conn.commit()
     
-    def get_last_content_upgrade(self, url):
+    def get_all_last_content_upgrade(self,):
+        urls = self.get_urls()
+        all_last_c_upgrade = []
         c = self.conn.cursor()
-        c.execute('SELECT last_update FROM urls WHERE url=?', (url,))
-        links_json = c.fetchone()[0]
-        links = json.loads(links_json)
-        return links
+        # 执行查询
+        c.execute("SELECT * FROM urls WHERE last_update IS NOT NULL")
+
+        # 获取一行数据
+        result = c.fetchone()
+
+        # 逐行获取数据
+        while result is not None:
+            print("c.fetchon()[5]:",result[5])
+            print(type(result[5]))
+            json_result = json.loads(result[5])
+            print(type(json_result))
+            all_last_c_upgrade.extend(json_result)
+
+            # 获取下一行数据
+            result = c.fetchone()
+        return all_last_c_upgrade
 
     def set_refresh_time(self, refresh_time):
         c = self.conn.cursor()

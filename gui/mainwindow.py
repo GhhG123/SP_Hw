@@ -4,22 +4,24 @@ from PyQt5.QtCore import Qt, QTimer
 from gui.editurl import EditUrlDialog
 from gui.settings import SettingsDialog
 import PyQt5.QtCore as QtCore
+import utils.spider as Spider
 
 
 class MainWindow(QMainWindow):
     edit_url_clicked = QtCore.pyqtSignal()
     settings_clicked = QtCore.pyqtSignal()
-    def __init__(self, database):
+    def __init__(self, database, spider):
         super().__init__()
         # self.add_url_func = add_url_func
         # self.get_urls_func = get_urls_func
         self.database = database
+        self.spider = spider
         self.current_urls = []
         self.init_ui()
-        self.refresh_urls()
+        #self.refresh_any_updates()
         self.refresh_timer = QTimer()
         self.refresh_timer.setInterval(24*60*60*1000)
-        self.refresh_timer.timeout.connect(self.refresh_urls)
+        self.refresh_timer.timeout.connect(self.refresh_any_updates)
         self.refresh_timer.start()
 
     def init_ui(self):
@@ -34,8 +36,10 @@ class MainWindow(QMainWindow):
         label = QLabel('Latest updates:')
         main_layout.addWidget(label)
 
-        self.url_list = QListWidget()
-        main_layout.addWidget(self.url_list)
+        # that's wrong
+        self.content_update_list = QListWidget()
+        #self.content_update_list.setTextFormat(Qt.RichText)
+        main_layout.addWidget(self.content_update_list)
 
         button_layout = QHBoxLayout()
         main_layout.addLayout(button_layout)
@@ -45,12 +49,29 @@ class MainWindow(QMainWindow):
         button_layout.addWidget(edit_url_button)
 
         refresh_button = QPushButton('Refresh')
-        refresh_button.clicked.connect(self.refresh_urls)
+        refresh_button.clicked.connect(self.refresh_any_updates)
         button_layout.addWidget(refresh_button)
 
         settings_button = QPushButton('Settings')
         settings_button.clicked.connect(self.show_settings_dialog)
         button_layout.addWidget(settings_button)
+
+    def refresh_any_updates(self):
+        # exist_update = self.spider.check_all(self.database)
+        # if exist_update:
+        self.refresh_content_mainwindow()
+        QMessageBox.information(self, 'Info', 'There are new updates!')
+        
+    def refresh_content_mainwindow(self):
+        self.content_update_list.clear()
+        all_links = self.database.get_all_last_content_upgrade()
+        #print(all_links)
+        for link in all_links:
+            item = QListWidgetItem()
+            item.setText("<a href='{0}'>{1}</a>".format(link[1], link[0]))
+            item.setToolTip("<html><head/><body><p>" + item.text() + "</p></body></html>")
+            self.content_update_list.addItem(item)
+            print(item)
 
     def refresh_urls(self):
         #self.current_urls = self.get_urls_func()
@@ -60,22 +81,26 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(f"{url[1]} ({url[2]})")
             item.setData(Qt.UserRole, url[0])
             self.url_list.addItem(item)
+        print('refresh urls')
 
     def show_edit_url_dialog(self):
         urls = self.database.get_urls()
         dialog = EditUrlDialog(self.database, urls, self)
         dialog.exec_()
-        self.refresh_urls()
+        #self.refresh_urls()
 
     def show_settings_dialog(self):
         dialog = SettingsDialog(self.refresh_timer.interval()/(60*60*1000), self)
         if dialog.exec_():
             self.refresh_timer.setInterval(int(dialog.time_edit.text())*60*60*1000)
 
+
+
+
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Quit', 'Are you sure you want to quit?',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            event.accept()
+            event.accept()  #-
         else:
             event.ignore()
